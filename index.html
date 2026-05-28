@@ -12,7 +12,7 @@
 <body>
 
 <!-- ========== LOGIN PAGE ========== -->
-<div id="page-login" class="page active">
+<div id="page-login">
   <div class="login-bg">
     <div class="login-grid-overlay"></div>
     <div class="login-left">
@@ -40,7 +40,6 @@
         <div class="stat-chip"><span class="stat-val">5</span><span class="stat-label">User Roles</span></div>
       </div>
     </div>
-
     <div class="login-right">
       <div class="login-card">
         <div class="login-card-header">
@@ -52,7 +51,7 @@
         <div class="login-card-body">
           <h3>Employee Sign In</h3>
           <p class="login-sub">Enter your credentials to access the delay portal</p>
-          <div id="login-error" class="login-error" style="display:none;">⚠ Invalid Employee No. or Password</div>
+          <div id="login-error" class="alert alert-danger" style="display:none;"></div>
           <div class="form-group">
             <label>Employee No. <span class="req">*</span></label>
             <input type="text" id="login-emp" placeholder="e.g. EMP001" autocomplete="off" />
@@ -69,13 +68,10 @@
               <option>BF</option><option>SP</option><option>PPM</option><option>IT</option>
             </select>
           </div>
-          <button class="btn-primary btn-block" id="btn-login">LOGIN TO SYSTEM →</button>
-          <div class="login-hint">
-            <b>Demo Accounts:</b><br>
-            EMP001 / admin123 → sys_admin<br>
-            EMP002 / user123 &nbsp;→ dept_admin<br>
-            EMP003 / user123 &nbsp;→ dept_user
-          </div>
+          <button class="btn-primary btn-block" id="btn-login">
+            <span id="btn-login-text">LOGIN TO SYSTEM →</span>
+            <span id="btn-login-spin" class="spinner" style="display:none;"></span>
+          </button>
         </div>
       </div>
     </div>
@@ -83,9 +79,8 @@
 </div>
 
 <!-- ========== MAIN APP SHELL ========== -->
-<div id="page-app" class="page" style="display:none;">
+<div id="page-app" style="display:none;">
 
-  <!-- TOP BAR -->
   <header class="topbar">
     <div class="topbar-left">
       <button class="sidebar-toggle" id="sidebar-toggle">&#9776;</button>
@@ -100,17 +95,16 @@
     <div class="topbar-right">
       <div class="topbar-clock" id="topbar-clock"></div>
       <div class="topbar-user">
-        <div class="user-avatar" id="user-avatar-top">SA</div>
+        <div class="user-avatar" id="user-avatar-top">--</div>
         <div class="user-info">
-          <span id="user-name-top">System Admin</span>
-          <span id="user-role-top" class="role-badge">sys_admin</span>
+          <span id="user-name-top">—</span>
+          <span id="user-role-top" class="role-badge">—</span>
         </div>
         <button class="btn-logout" id="btn-logout">LOGOUT</button>
       </div>
     </div>
   </header>
 
-  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <nav class="sidebar-nav">
       <div class="nav-section-label">MAIN MENU</div>
@@ -123,11 +117,9 @@
       <a class="nav-item nav-admin" data-page="user-mgmt" onclick="navigate('user-mgmt')">
         <span class="nav-icon">👤</span> User Management
       </a>
-
       <div class="sidebar-bolt">
         <div class="sb-bolt"></div><div class="sb-line"></div><div class="sb-bolt"></div>
       </div>
-
       <div class="nav-section-label">QUICK STATS</div>
       <div class="sidebar-stats">
         <div class="ss-item"><span>Today's Delays</span><span class="ss-val" id="ss-today">—</span></div>
@@ -138,7 +130,6 @@
     <div class="sidebar-footer">v1.0.0 &nbsp;|&nbsp; VSP-IT Division</div>
   </aside>
 
-  <!-- MAIN CONTENT -->
   <main class="main-content" id="main-content">
 
     <!-- ===== DELAY ENTRY ===== -->
@@ -148,28 +139,26 @@
           <h2>⚙ Delay Entry</h2>
           <p>Record equipment delays for critical shop departments</p>
         </div>
-        <div class="page-header-meta">
-          <span class="dept-badge" id="entry-dept-badge">SMS</span>
-        </div>
+        <span class="dept-badge" id="entry-dept-badge">—</span>
       </div>
 
       <div class="form-card">
         <div class="form-card-header">
           <span class="fc-title">🔩 New Delay Record</span>
-          <span class="fc-id" id="form-record-id">REC-AUTO</span>
+          <span class="fc-id">AUTO-GENERATED ID</span>
         </div>
         <div class="form-grid">
           <div class="form-group">
             <label>Shop / Department <span class="req">*</span></label>
-            <select id="f-shop"><option value="">-- Select Shop --</option></select>
+            <select id="f-shop"><option value="">-- Loading... --</option></select>
           </div>
           <div class="form-group">
             <label>Equipment Name <span class="req">*</span></label>
-            <select id="f-eqpt"><option value="">-- Select Equipment --</option></select>
+            <select id="f-eqpt" disabled><option value="">-- Select Shop First --</option></select>
           </div>
           <div class="form-group">
             <label>Sub Equipment</label>
-            <select id="f-subeqpt"><option value="">-- None --</option></select>
+            <select id="f-subeqpt" disabled><option value="">-- None --</option></select>
           </div>
           <div class="form-group">
             <label>Agency <span class="req">*</span></label>
@@ -183,6 +172,7 @@
               <option value="S">Safety</option>
               <option value="MIS">Miscellaneous</option>
               <option value="ID">Idle</option>
+              <option value="CR">Cold Repair</option>
             </select>
           </div>
           <div class="form-group">
@@ -202,20 +192,24 @@
             <textarea id="f-desc" rows="3" placeholder="Describe the delay cause in detail..."></textarea>
           </div>
         </div>
+        <div id="form-alert" class="alert" style="display:none;margin:0 24px 8px;"></div>
         <div class="form-actions">
-          <button class="btn-primary" id="btn-submit-delay">SUBMIT RECORD</button>
+          <button class="btn-primary" id="btn-submit-delay">
+            <span id="btn-submit-text">SUBMIT RECORD</span>
+            <span id="btn-submit-spin" class="spinner" style="display:none;"></span>
+          </button>
           <button class="btn-secondary" id="btn-clear-delay">CLEAR FORM</button>
         </div>
-        <div id="form-success" class="form-success" style="display:none;">✓ Delay record submitted successfully!</div>
       </div>
 
       <div class="table-card">
         <div class="table-card-header">
           <span>🔧 Recent Entries (Last 10)</span>
-          <span class="tch-count" id="recent-count">— records</span>
+          <button class="btn-xs btn-edit" onclick="loadRecentDelays()">↻ Refresh</button>
         </div>
-        <div class="table-wrapper">
-          <table class="data-table" id="recent-table">
+        <div id="recent-loading" class="table-loading">Loading...</div>
+        <div class="table-wrapper" id="recent-wrapper" style="display:none;">
+          <table class="data-table">
             <thead>
               <tr>
                 <th>#</th><th>Date</th><th>Shop</th><th>Equipment</th>
@@ -265,45 +259,32 @@
             <option value="SD">Shutdown</option>
             <option value="ID">Idle</option>
             <option value="MIS">Miscellaneous</option>
+            <option value="CR">Cold Repair</option>
           </select>
         </div>
-        <div style="display:flex;gap:8px;align-items:flex-end">
-          <button class="btn-primary" id="btn-filter">GENERATE</button>
+        <div style="display:flex;gap:8px;align-items:flex-end;">
+          <button class="btn-primary" id="btn-filter">
+            <span id="btn-filter-text">GENERATE</span>
+            <span id="btn-filter-spin" class="spinner" style="display:none;"></span>
+          </button>
           <button class="btn-secondary" id="btn-export">⬇ CSV</button>
         </div>
       </div>
 
-      <!-- KPI cards -->
-      <div class="kpi-row" id="kpi-row">
-        <div class="kpi-card">
-          <div class="kpi-icon">⏱</div>
-          <div class="kpi-val" id="kpi-total-hrs">0</div>
-          <div class="kpi-label">Total Delay Hours</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">📋</div>
-          <div class="kpi-val" id="kpi-records">0</div>
-          <div class="kpi-label">Total Records</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">🏭</div>
-          <div class="kpi-val" id="kpi-shops">0</div>
-          <div class="kpi-label">Shops Affected</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-icon">⚡</div>
-          <div class="kpi-val" id="kpi-max-delay">0</div>
-          <div class="kpi-label">Max Single Delay (h)</div>
-        </div>
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-icon">⏱</div><div class="kpi-val" id="kpi-total-hrs">—</div><div class="kpi-label">Total Delay Hours</div></div>
+        <div class="kpi-card"><div class="kpi-icon">📋</div><div class="kpi-val" id="kpi-records">—</div><div class="kpi-label">Total Records</div></div>
+        <div class="kpi-card"><div class="kpi-icon">🏭</div><div class="kpi-val" id="kpi-shops">—</div><div class="kpi-label">Shops Affected</div></div>
+        <div class="kpi-card"><div class="kpi-icon">⚡</div><div class="kpi-val" id="kpi-max-delay">—</div><div class="kpi-label">Max Single Delay (h)</div></div>
       </div>
 
-      <!-- Tabular -->
       <div id="report-v1">
         <div class="table-card">
           <div class="table-card-header">
             <span>DELAY RECORDS</span>
             <span class="tch-count" id="report-count">0 records</span>
           </div>
+          <div id="report-loading" class="table-loading" style="display:none;">Loading...</div>
           <div class="table-wrapper">
             <table class="data-table">
               <thead>
@@ -319,24 +300,23 @@
         </div>
       </div>
 
-      <!-- Graphical -->
       <div id="report-v2" style="display:none;">
         <div class="charts-grid">
           <div class="chart-card chart-wide">
             <div class="chart-title">Total Delay Hours by Shop / Department</div>
-            <div class="chart-container" style="height:260px;">
+            <div class="chart-container" style="height:260px;position:relative;">
               <canvas id="chart-shop-bar"></canvas>
             </div>
           </div>
           <div class="chart-card">
             <div class="chart-title">Delays by Agency Type</div>
-            <div class="chart-container" style="height:280px;">
+            <div class="chart-container" style="height:280px;position:relative;">
               <canvas id="chart-agency-pie"></canvas>
             </div>
           </div>
           <div class="chart-card">
             <div class="chart-title">Daily Delay Trend (Hours)</div>
-            <div class="chart-container" style="height:280px;">
+            <div class="chart-container" style="height:280px;position:relative;">
               <canvas id="chart-daily-line"></canvas>
             </div>
           </div>
@@ -353,13 +333,13 @@
         </div>
         <button class="btn-primary" id="btn-add-user">+ ADD USER</button>
       </div>
-
       <div class="table-card">
         <div class="table-card-header">
           <span>REGISTERED USERS</span>
-          <span class="tch-count" id="user-count">— users</span>
+          <span class="tch-count" id="user-count">—</span>
         </div>
-        <div class="table-wrapper">
+        <div id="user-loading" class="table-loading">Loading...</div>
+        <div class="table-wrapper" id="user-wrapper" style="display:none;">
           <table class="data-table">
             <thead>
               <tr>
@@ -376,7 +356,7 @@
   </main>
 </div>
 
-<!-- MODAL: ADD/EDIT USER -->
+<!-- ===== USER MODAL ===== -->
 <div id="modal-user" class="modal-overlay" style="display:none;">
   <div class="modal-box">
     <div class="modal-header">
@@ -384,7 +364,8 @@
       <button class="modal-close" onclick="closeUserModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="form-grid" style="grid-template-columns:repeat(2,1fr);padding:0;gap:16px;">
+      <div id="modal-alert" class="alert" style="display:none;margin-bottom:14px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div class="form-group">
           <label>Employee No. <span class="req">*</span></label>
           <input type="text" id="mu-empno" placeholder="EMP001" />
@@ -399,6 +380,7 @@
             <option value="">--Select--</option>
             <option>SMS</option><option>LMMM</option><option>WRM</option>
             <option>BF</option><option>SP</option><option>PPM</option><option>IT</option>
+            <option>CO</option><option>PP</option><option>PAC</option>
           </select>
         </div>
         <div class="form-group">
@@ -422,14 +404,17 @@
         <div class="form-group">
           <label>Status</label>
           <select id="mu-status">
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
           </select>
         </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-primary" id="btn-save-user">SAVE USER</button>
+      <button class="btn-primary" id="btn-save-user">
+        <span id="btn-save-text">SAVE USER</span>
+        <span id="btn-save-spin" class="spinner" style="display:none;"></span>
+      </button>
       <button class="btn-secondary" onclick="closeUserModal()">CANCEL</button>
     </div>
   </div>
