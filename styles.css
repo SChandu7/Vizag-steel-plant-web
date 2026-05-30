@@ -72,26 +72,31 @@ body {
 }
 
 /* ===== LOGIN PAGE ===== */
+/* ===== UPDATE THIS BLOCK IN YOUR STYLES.CSS ===== */
 .login-bg {
   min-height: 100vh;
   display: flex;
-  background: var(--bg-main);
+  /* Adds a linear gradient overlay mask on top of your plant image file */
+  background: linear-gradient(rgba(240, 242, 245, 0.92), rgba(240, 242, 245, 0.92)), 
+              url('image_65da82.png') no-repeat center center;
+  background-size: cover;
   position: relative;
   overflow: hidden;
 }
 
 /* Subtle grid lines — blueprint feel */
+/* ===== UPDATE THIS BLOCK TO MATCH CHANNELS CLEARLY ===== */
 .login-bg::before {
   content: '';
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(44,62,80,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(44,62,80,0.04) 1px, transparent 1px);
+    linear-gradient(rgba(44, 62, 80, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(44, 62, 80, 0.05) 1px, transparent 1px);
   background-size: 40px 40px;
   pointer-events: none;
+  z-index: 0; /* Ensures it sits underneath text layers smoothly */
 }
-
 .login-grid-overlay {
   position: absolute;
   top: 0; right: 0; bottom: 0;
@@ -127,7 +132,7 @@ body {
   justify-content: center;
   padding: 60px 64px;
   position: relative;
-  z-index: 1;
+  z-index: 1; /* Forces typography layer above background composite */
 }
 
 .login-brand {
