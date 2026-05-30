@@ -78,7 +78,7 @@ body {
   display: flex;
   /* Adds a linear gradient overlay mask on top of your plant image file */
   background: linear-gradient(rgba(240, 242, 245, 0.92), rgba(240, 242, 245, 0.92)), 
-              url('image_65da82.png') no-repeat center center;
+              url('https://www.thehansindia.com/news/cities/visakhapatnam/vizag-steel-plant-stir-a-wild-goose-chase-672726') no-repeat center center;
   background-size: cover;
   position: relative;
   overflow: hidden;
