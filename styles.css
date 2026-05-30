@@ -78,7 +78,7 @@ body {
   display: flex;
   /* Adds a linear gradient overlay mask on top of your plant image file */
   background: linear-gradient(rgba(240, 242, 245, 0.92), rgba(240, 242, 245, 0.92)), 
-              url('https://assets.thehansindia.com/h-upload/2021/02/17/1031974-vizag-steel.webp') no-repeat center center;
+              url('https://djangotestcase.s3.ap-south-1.amazonaws.com/palnt.jpeg') no-repeat center center;
   background-size: cover;
   position: relative;
   overflow: hidden;
