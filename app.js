@@ -19,13 +19,23 @@ let chartInstances = {};
 // ─────────────────────────────────────────────────────────────
 
 async function apiFetch(path, options = {}) {
-  const defaults = {
-    credentials: "include",          // send session cookie cross-origin
-    headers: { "Content-Type": "application/json" },
+  const token = localStorage.getItem("vsp_token");
+
+  // Merge headers cleanly up front safely
+  const customHeaders = options.headers || {};
+  const headers = {
+    "Content-Type": "application/json",
+    ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+    ...customHeaders
   };
-  const res = await fetch(API + path, { ...defaults, ...options,
-    headers: { ...defaults.headers, ...(options.headers || {}) }
-  });
+
+  const finalOptions = {
+    ...options,
+    headers: headers
+  };
+
+  const res = await fetch(API + path, finalOptions);
+  
   const json = await res.json().catch(() => ({ status: "error", message: "Invalid server response." }));
   return { ok: res.ok, status: res.status, json };
 }
@@ -48,11 +58,21 @@ updateClock();
 // ─────────────────────────────────────────────────────────────
 
 (async function init() {
+  const token = localStorage.getItem("vsp_token");
+  
+  // Guard clause: If no token exists locally, don't waste an API call
+  if (!token) {
+    showLogin();
+    return;
+  }
+
   const { ok, json } = await apiFetch("/auth/me/");
   if (ok && json.data) {
     currentUser = json.data;
     showApp();
   } else {
+    // Token might be expired or invalid; clear it out
+    localStorage.removeItem("vsp_token");
     showLogin();
   }
 })();
@@ -88,6 +108,8 @@ async function doLogin() {
     return;
   }
 
+  // Safely save the token string handed back by Django
+  localStorage.setItem("vsp_token", json.token);
   errEl.style.display = "none";
   currentUser = json.data;
   showApp();
@@ -95,6 +117,7 @@ async function doLogin() {
 
 document.getElementById("btn-logout").addEventListener("click", async () => {
   await apiFetch("/auth/logout/", { method: "POST" });
+  localStorage.removeItem("vsp_token");
   currentUser = null;
   showLogin();
   // Reset form state
@@ -316,7 +339,7 @@ function clearEntryForm() {
   document.getElementById("f-subeqpt").disabled = true;
   document.getElementById("f-eqpt").innerHTML   = '<option value="">-- Select Shop First --</option>';
   document.getElementById("f-eqpt").disabled    = true;
-  document.getElementById("f-desc").value       = "";
+  document.getElementById("f-desc").value        = "";
   document.getElementById("f-duration").value   = "";
   setDefaultDates();
 }
@@ -380,7 +403,6 @@ async function loadSidebarStats() {
 // ─────────────────────────────────────────────────────────────
 
 function initReportsPage() {
-  // auto-generate on navigate
   fetchReport();
 }
 
@@ -593,7 +615,7 @@ document.getElementById("btn-export").addEventListener("click", () => {
     d.entered_by,
   ]);
   const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
-  const a   = document.createElement("a");
+  const a    = document.createElement("a");
   a.href    = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
   a.download = `VSP_Delays_${new Date().toISOString().substring(0,10)}.csv`;
   a.click();
@@ -651,7 +673,6 @@ document.getElementById("btn-add-user").addEventListener("click", () => {
 });
 
 async function openEditUser(userId) {
-  // Fetch user data from current list (no separate endpoint needed)
   const { ok, json } = await apiFetch("/users/");
   if (!ok) return;
   const u = json.data.find(x => x.id === userId);
@@ -660,11 +681,11 @@ async function openEditUser(userId) {
   editingUserId = userId;
   document.getElementById("modal-user-title").textContent = "EDIT USER";
   document.getElementById("mu-empno").value    = u.emp_no;
-  document.getElementById("mu-empno").disabled = true;   // can't change emp_no
+  document.getElementById("mu-empno").disabled = true;
   document.getElementById("mu-name").value     = u.emp_name;
   document.getElementById("mu-dept").value     = u.dept;
   document.getElementById("mu-desig").value    = u.designation;
-  document.getElementById("mu-pass").value     = "";     // blank = no change
+  document.getElementById("mu-pass").value     = "";
   document.getElementById("mu-role").value     = u.role;
   document.getElementById("mu-status").value   = String(u.is_active);
   document.getElementById("modal-alert").style.display = "none";
@@ -692,12 +713,10 @@ async function saveUser() {
 
   let res;
   if (editingUserId) {
-    // PUT update
     const payload = { emp_name: name, dept, designation: desig, role, is_active: active };
     if (pass) payload.password = pass;
     res = await apiFetch(`/users/${editingUserId}/`, { method: "PUT", body: JSON.stringify(payload) });
   } else {
-    // POST create
     const empno = document.getElementById("mu-empno").value.trim().toUpperCase();
     if (!empno || !pass) {
       showAlert(alertEl, "Employee No. and Password are required for new users.", "danger");
@@ -757,6 +776,7 @@ function escHtml(str) {
   return String(str ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
+// Fixed function structure assignment syntax
 function showAlert(el, msg, type = "danger") {
   el.className  = `alert alert-${type}`;
   el.textContent = msg;
